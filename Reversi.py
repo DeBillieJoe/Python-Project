@@ -1,5 +1,4 @@
-import random, sys, pygame, time, copy
-from pygame.locals import *
+import pygame
 
 
 WHITE_TILE = 'WHITE_TILE'
@@ -12,6 +11,7 @@ DIRECTIONS = [(0, 1), (1, 1), (1, 0), (1, -1),
 
 
 class Board:
+
     def __init__(self):
         self.board = [[EMPTY_SPACE]*HEIGHT for i in range(0, WIDTH)]
         self.board[3][3] = WHITE_TILE
@@ -22,10 +22,13 @@ class Board:
     def reset_board(self):
         self.board = Board().board
 
+        return self.board
 
-class PlayerMove:
-    def __init__(self, player, board):
-        self.player = player
+
+class Player:
+
+    def __init__(self, tile, board):
+        self.tile = tile
         self.board = board
 
     def is_on_board(self, mousex, mousey):
@@ -39,36 +42,40 @@ class PlayerMove:
         else:
             return False
 
-        self.board.board[mousex][mousey] = self.player
+        self.board.board[mousex][mousey] = self.tile
 
-        if self.player == WHITE_TILE:
+        if self.tile == WHITE_TILE:
             other_tile = BLACK_TILE
         else:
             other_tile = WHITE_TILE
 
         tiles_to_flip = []
 
-        for directionx, directiony in DIRECTIONS:
+        for direction in DIRECTIONS:
             x, y = mousex, mousey
-            x += directionx
-            y += directiony
+            x += direction[0]
+            y += direction[1]
 
             if self.is_on_board(x, y) and self.board.board[x][y] == other_tile:
-                x += directionx
-                y += directiony
+                x += direction[0]
+                y += direction[1]
                 if not self.is_on_board(x, y):
                     continue
+
                 while self.board.board[x][y] == other_tile:
-                    x += directionx
-                    y += directiony
+                    x += direction[0]
+                    y += direction[1]
                     if not self.is_on_board(x, y):
                         break
+
                 if not self.is_on_board(x, y):
                     continue
-                if self.board.board[x][y] == self.player:
+
+                if self.board.board[x][y] == self.tile:
                     while True:
-                        x -= directionx
-                        y -= directiony
+                        x -= direction[0]
+                        y -= direction[1]
+
                         if x == mousex and y == mousey:
                             break
                         tiles_to_flip.append((x, y))
@@ -85,3 +92,19 @@ class PlayerMove:
                        for y in range(0, HEIGHT) if self.is_valid_move(x, y)]
 
         return valid_moves
+
+    def make_move(self, mousex, mousey):
+        tiles_to_flip = self.is_valid_move(mousex, mousey)
+        self.board.board[mousex][mousey] = self.tile
+
+        if not tiles_to_flip:
+            return False
+
+        for move in tiles_to_flip:
+            self.board.board[move[0]][move[1]] = self.tile
+
+        return True
+
+
+class ComputerMove(Player):
+    pass
