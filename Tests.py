@@ -72,6 +72,16 @@ class TestGame(unittest.TestCase):
         self.assertEqual(self.board.board[3][2], BLACK_TILE)
         self.assertFalse(self.player_one.make_move(3, 2))
 
+    def test_score(self):
+        self.board.reset_board()
+
+        self.player_one.make_move(3, 2)
+        self.player_two.make_move(4, 2)
+        self.player_one.make_move(5, 3)
+        self.player_two.make_move(2, 2)
+
+        self.assertEqual(self.board.score, {WHITE_TILE: 5, BLACK_TILE: 3})
+
 
 if __name__ == '__main__':
     unittest.main()
