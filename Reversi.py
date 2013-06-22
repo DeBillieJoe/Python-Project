@@ -86,11 +86,11 @@ class Player:
 
     def make_move(self, mousex, mousey):
         tiles_to_flip = self.is_valid_move(mousex, mousey)
-        self.board.board[mousex][mousey] = self.tile
 
         if not tiles_to_flip:
             return False
 
+        self.board.board[mousex][mousey] = self.tile
         for move in tiles_to_flip:
             self.board.board[move[0]][move[1]] = self.tile
 
