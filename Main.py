@@ -16,6 +16,8 @@ YMARGIN = int((WINDOWHEIGHT-(HEIGHT*SPACE))/2)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 1000)
+BLUE = (0, 0, 255)
+YELLOW = (255, 255, 0)
 
 
 pygame.init()
@@ -29,6 +31,9 @@ class Game:
         self.clock = pygame.time.Clock()
         self.display = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
         pygame.display.set_caption('Reversi')
+        self.player_one = Reversi.Player(BLACK_TILE, self.board)
+        self.player_two = Reversi.Player(WHITE_TILE, self.board)
+        self.turn = BLACK_TILE
 
         self.b_image = pygame.image.load(b_image)
         self.b_image = pygame.transform.smoothscale(self.b_image, (WIDTH*SPACE, HEIGHT*SPACE))
@@ -47,21 +52,78 @@ class Game:
         main_board.reset_board()
 
         self.draw_board(main_board)
+        new_game_surf = FONT.render('New Game', True, BLUE, RED)
+        new_game_rect = new_game_surf.get_rect()
+        new_game_rect.topright = (WINDOWWIDTH-8, 10)
 
-        newGameSurf = FONT.render('New Game', True, WHITE, RED)
-        newGameRect = newGameSurf.get_rect()
-        newGameRect.topright = (WINDOWWIDTH-8, 10)
+        self.display.blit(new_game_surf, new_game_rect)
+        pygame.display.update()
+        self.clock.tick(FPS)
 
+        self.check_for_quit()
         while True:
-            self.draw_board(main_board)
-            #drawInfo(boardToDraw, playerTile, computerTile, turn)
+            if self.turn == BLACK_TILE:
+                if self.player_one.get_valid_moves() == []:
+                    break
 
-            # Draw the "New Game" and "Hints" buttons.
-            self.display.blit(newGameSurf, newGameRect)
-            #DISPLAYSURF.blit(hintsSurf, hintsRect)
-            self.check_for_quit()
-            self.clock.tick(FPS)
-            pygame.display.update()
+                move = None
+                while not move:
+                    self.check_for_quit()
+
+                    for event in pygame.event.get():
+                        if event.type == MOUSEBUTTONUP:
+                            mousex, mousey = event.pos
+
+                            move = self.clicked(mousex, mousey)
+                            if not move and not self.player_one.is_valid_move(move[0], move[1]):
+                                move = None
+
+                    self.draw_board(main_board)
+                    self.display.blit(new_game_surf, new_game_rect)
+
+                    pygame.display.update()
+                    self.clock.tick(FPS)
+
+                if move is not None:
+                    self.player_one.make_move(move[0], move[1])
+                if self.player_two.get_valid_moves() is not []:
+                    self.turn = WHITE_TILE
+
+            else:
+                if self.player_two.get_valid_moves() == []:
+                    break
+
+                move = None
+                while not move:
+                    self.check_for_quit()
+
+                    for event in pygame.event.get():
+                        if event.type == MOUSEBUTTONUP:
+                            mousex, mousey = event.pos
+
+                            move = self.clicked(mousex, mousey)
+                            if not move and not self.player_two.is_valid_move(move[0], move[1]):
+                                move = None
+
+                    self.draw_board(main_board)
+                    self.display.blit(new_game_surf, new_game_rect)
+
+                    pygame.display.update()
+                    self.clock.tick(FPS)
+
+                self.player_two.make_move(move[0], move[1])
+                if self.player_one.get_valid_moves() is not []:
+                    self.turn = BLACK_TILE
+
+    def clicked(self, mousex, mousey):
+        for x in range(WIDTH):
+            for y in range(HEIGHT):
+                if mousex > x*SPACE+XMARGIN and \
+                   mousex < (x+1)*SPACE+XMARGIN and \
+                   mousey > y*SPACE+YMARGIN and \
+                   mousey < (y+1)*SPACE+YMARGIN:
+                    return (x, y)
+        return None
 
     def draw_board(self, board):
         self.display.blit(self.bg_image, self.bg_image.get_rect())
@@ -93,15 +155,15 @@ class Game:
         for event in pygame.event.get((QUIT, KEYUP)):
             if event.type == QUIT or (event.type == KEYUP and event.key == K_ESCAPE):
                 text = 'Do you really want to quit?'
-                text_surf = BIGFONT.render(text, True, WHITE, RED)
+                text_surf = BIGFONT.render(text, True, BLUE, YELLOW)
                 text_rect = text_surf.get_rect()
                 text_rect.center = (int(WINDOWWIDTH/2), int(WINDOWHEIGHT/2)+50)
 
-                yes_surf = BIGFONT.render('Yes', True, WHITE, RED)
+                yes_surf = BIGFONT.render('Yes', True, BLUE, YELLOW)
                 yes_rect = yes_surf.get_rect()
                 yes_rect.center = (int(WINDOWWIDTH/2)-60, int(WINDOWHEIGHT/2)+90)
 
-                no_surf = BIGFONT.render('No', True, WHITE, RED)
+                no_surf = BIGFONT.render('No', True, BLUE, YELLOW)
                 no_rect = no_surf.get_rect()
                 no_rect.center = (int(WINDOWWIDTH/2)+60, int(WINDOWHEIGHT/2)+90)
 
