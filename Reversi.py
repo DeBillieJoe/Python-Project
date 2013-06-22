@@ -1,6 +1,3 @@
-import pygame
-
-
 WHITE_TILE = 'WHITE_TILE'
 BLACK_TILE = 'BLACK_TILE'
 EMPTY_SPACE = 'EMPTY_SPACE'
@@ -18,6 +15,7 @@ class Board:
         self.board[3][4] = BLACK_TILE
         self.board[4][3] = BLACK_TILE
         self.board[4][4] = WHITE_TILE
+        self.score = {WHITE_TILE: 2, BLACK_TILE: 2}
 
     def reset_board(self):
         self.board = Board().board
@@ -56,17 +54,10 @@ class Player:
             x += direction[0]
             y += direction[1]
 
-            if self.is_on_board(x, y) and self.board.board[x][y] == other_tile:
+            while self.is_on_board(x, y) and \
+                    self.board.board[x][y] == other_tile:
                 x += direction[0]
                 y += direction[1]
-                if not self.is_on_board(x, y):
-                    continue
-
-                while self.board.board[x][y] == other_tile:
-                    x += direction[0]
-                    y += direction[1]
-                    if not self.is_on_board(x, y):
-                        break
 
                 if not self.is_on_board(x, y):
                     continue
@@ -102,6 +93,14 @@ class Player:
 
         for move in tiles_to_flip:
             self.board.board[move[0]][move[1]] = self.tile
+
+        if self.tile == WHITE_TILE:
+            other_tile = BLACK_TILE
+        else:
+            other_tile = WHITE_TILE
+
+        self.board.score[self.tile] += 1+len(tiles_to_flip)
+        self.board.score[other_tile] -= len(tiles_to_flip)
 
         return True
 
