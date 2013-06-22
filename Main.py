@@ -1,9 +1,9 @@
 import Reversi
 import pygame
-import time
+import sys
+from pygame.locals import *
 
-
-FPS =10
+FPS = 10
 WINDOWHEIGHT = 480
 WINDOWWIDTH = 640
 WIDTH = Reversi.WIDTH
@@ -59,7 +59,7 @@ class Game:
             # Draw the "New Game" and "Hints" buttons.
             self.display.blit(newGameSurf, newGameRect)
             #DISPLAYSURF.blit(hintsSurf, hintsRect)
-
+            self.check_for_quit()
             self.clock.tick(FPS)
             pygame.display.update()
 
@@ -76,7 +76,7 @@ class Game:
 
         for x in range(WIDTH):
             for y in range(HEIGHT):
-                centerx, centery = self.translateBoardToPixelCoord(x, y)
+                centerx, centery = self.board_to_pixel_coord(x, y)
                 if board.board[x][y] in [BLACK_TILE, WHITE_TILE]:
                     if board.board[x][y] == WHITE_TILE:
                         tile_color = WHITE
@@ -85,9 +85,42 @@ class Game:
 
                     pygame.draw.circle(self.display, tile_color, (centerx, centery), int(SPACE/2)-4)
 
-    def translateBoardToPixelCoord(self, x, y):
+    def board_to_pixel_coord(self, x, y):
         return XMARGIN + x*SPACE+int(SPACE/2), \
             YMARGIN + y*SPACE+int(SPACE/2)
+
+    def check_for_quit(self):
+        for event in pygame.event.get((QUIT, KEYUP)):
+            if event.type == QUIT or (event.type == KEYUP and event.key == K_ESCAPE):
+                text = 'Do you really want to quit?'
+                text_surf = BIGFONT.render(text, True, WHITE, RED)
+                text_rect = text_surf.get_rect()
+                text_rect.center = (int(WINDOWWIDTH/2), int(WINDOWHEIGHT/2)+50)
+
+                yes_surf = BIGFONT.render('Yes', True, WHITE, RED)
+                yes_rect = yes_surf.get_rect()
+                yes_rect.center = (int(WINDOWWIDTH/2)-60, int(WINDOWHEIGHT/2)+90)
+
+                no_surf = BIGFONT.render('No', True, WHITE, RED)
+                no_rect = no_surf.get_rect()
+                no_rect.center = (int(WINDOWWIDTH/2)+60, int(WINDOWHEIGHT/2)+90)
+
+                while True:
+                    self.check_for_quit()
+                    for event in pygame.event.get():
+                        if event.type == MOUSEBUTTONUP:
+                            mousex, mousey = event.pos
+                            if yes_rect.collidepoint((mousex, mousey)):
+                                pygame.quit()
+                                sys.exit()
+                            elif no_rect.collidepoint((mousex, mousey)):
+                                return True
+
+                    self.display.blit(text_surf, text_rect)
+                    self.display.blit(yes_surf, yes_rect)
+                    self.display.blit(no_surf, no_rect)
+                    pygame.display.update()
+                    self.clock.tick(FPS)
 
 
 def main():
