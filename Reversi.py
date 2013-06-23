@@ -18,9 +18,9 @@ class Board:
         self.score = {WHITE_TILE: 2, BLACK_TILE: 2}
 
     def reset_board(self):
-        self.board = Board().board
+        self = Board()
 
-        return self.board
+        return self
 
 
 class Player:
@@ -105,5 +105,6 @@ class Player:
         return True
 
 
-class ComputerMove(Player):
-    pass
+class Computer(Player):
+    def make_move(self, mousex, mousey):
+        pass
