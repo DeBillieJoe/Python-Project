@@ -22,7 +22,8 @@ YELLOW = (255, 255, 0)
 
 pygame.init()
 FONT = pygame.font.Font('freesansbold.ttf', 16)
-BIGFONT = pygame.font.Font('freesansbold.ttf', 32)
+BIGFONT = pygame.font.Font('freesansbold.ttf', 24)
+HUGEFONT = pygame.font.Font('freesansbold.ttf', 72)
 
 
 class Game:
@@ -31,9 +32,9 @@ class Game:
         self.clock = pygame.time.Clock()
         self.display = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
         pygame.display.set_caption('Reversi')
-        self.player_one = Reversi.Player(BLACK_TILE, self.board)
-        self.player_two = Reversi.Player(WHITE_TILE, self.board)
-        self.turn = BLACK_TILE
+        self.player_one = None
+        self.player_two = None
+        self.turn = None
 
         self.b_image = pygame.image.load(b_image)
         self.b_image = pygame.transform.smoothscale(self.b_image, (WIDTH*SPACE, HEIGHT*SPACE))
@@ -48,13 +49,15 @@ class Game:
                 break
 
     def run_game(self):
-        main_board = self.board
-        main_board.reset_board()
+        self.board = self.board.reset_board()
+        self.turn = BLACK_TILE
 
-        self.draw_board(main_board)
-        new_game_surf = FONT.render('New Game', True, BLUE, RED)
+        self.draw_board(self.board)
+        self.choose_players()
+
+        new_game_surf = FONT.render('New Game', True, WHITE, RED)
         new_game_rect = new_game_surf.get_rect()
-        new_game_rect.topright = (WINDOWWIDTH-8, 10)
+        new_game_rect.topright = (WINDOWWIDTH-15, 15)
 
         self.display.blit(new_game_surf, new_game_rect)
         pygame.display.update()
@@ -62,58 +65,96 @@ class Game:
 
         self.check_for_quit()
         while True:
-            if self.turn == BLACK_TILE:
-                if self.player_one.get_valid_moves() == []:
-                    break
+            if self.player_one.tile == self.turn:
+                player = self.player_one
+                other_player = self.player_two
+            elif self.player_two.tile == self.turn:
+                player = self.player_two
+                other_player = self.player_one
 
-                move = None
-                while not move:
-                    self.check_for_quit()
+            if player.get_valid_moves() == []:
+                break
 
-                    for event in pygame.event.get():
-                        if event.type == MOUSEBUTTONUP:
-                            mousex, mousey = event.pos
+            move = None
+            while not move:
+                self.check_for_quit()
 
-                            move = self.clicked(mousex, mousey)
-                            if not move and not self.player_one.is_valid_move(move[0], move[1]):
-                                move = None
+                for event in pygame.event.get():
+                    if event.type == MOUSEBUTTONUP:
+                        mousex, mousey = event.pos
+                        if new_game_rect.collidepoint(mousex, mousey):
+                            return True
 
-                    self.draw_board(main_board)
-                    self.display.blit(new_game_surf, new_game_rect)
+                        move = self.clicked(mousex, mousey)
+                        if move is not None and not player.is_valid_move(move[0], move[1]):
+                            move = None
 
-                    pygame.display.update()
-                    self.clock.tick(FPS)
+                self.draw_board(self.board)
+                self.get_score()
+                self.get_turn(self.turn)
+                self.display.blit(new_game_surf, new_game_rect)
+                pygame.display.update()
+                self.clock.tick(FPS)
 
-                if move is not None:
-                    self.player_one.make_move(move[0], move[1])
-                if self.player_two.get_valid_moves() is not []:
-                    self.turn = WHITE_TILE
+            player.make_move(move[0], move[1])
+            if other_player.get_valid_moves() is not []:
+                self.turn = other_player.tile
 
+    def get_score(self):
+        if isinstance(self.player_two, Reversi.Computer):
+            text = 'Player: %s    Computer: %s'
+        else:
+            text = 'Player 1: %s    Player 2: %s'
+        score_board = FONT.render(text % (str(self.board.score[BLACK_TILE]), str(self.board.score[WHITE_TILE])), True, WHITE)
+        score_board_rect = score_board.get_rect()
+        score_board_rect.bottomleft = (10, WINDOWHEIGHT-5)
+        self.display.blit(score_board, score_board_rect)
+
+    def get_turn(self, turn):
+        if isinstance(self.player_two, Reversi.Computer):
+            if self.turn == self.player_one.tile:
+                text = "Player's turn!"
             else:
-                if self.player_two.get_valid_moves() == []:
-                    break
+                text = "Computer's turn!"
+        else:
+            if self.turn == self.player_one.tile:
+                text = "Player 1's turn!"
+            else:
+                text = "Player 2's turn!"
 
-                move = None
-                while not move:
-                    self.check_for_quit()
+        turn = FONT.render(text, True, WHITE)
+        turn_rect = turn.get_rect()
+        turn_rect.bottomleft = (210, WINDOWHEIGHT-5)
+        self.display.blit(turn, turn_rect)
 
-                    for event in pygame.event.get():
-                        if event.type == MOUSEBUTTONUP:
-                            mousex, mousey = event.pos
+    def choose_players(self):
+        one_player = BIGFONT.render('Player vs Computer', True, BLUE, YELLOW)
+        one_player_rect = one_player.get_rect()
+        one_player_rect.center = (int(WINDOWWIDTH/2), int(WINDOWHEIGHT/2)-66)
 
-                            move = self.clicked(mousex, mousey)
-                            if not move and not self.player_two.is_valid_move(move[0], move[1]):
-                                move = None
+        two_player = BIGFONT.render('Player 1 vs Player 2', True, BLUE, YELLOW)
+        two_player_rect = two_player.get_rect()
+        two_player_rect.center = (int(WINDOWWIDTH/2), int(WINDOWHEIGHT/2)+66)
 
-                    self.draw_board(main_board)
-                    self.display.blit(new_game_surf, new_game_rect)
+        while True:
+            self.check_for_quit()
 
-                    pygame.display.update()
-                    self.clock.tick(FPS)
+            for event in pygame.event.get():
+                if event.type == MOUSEBUTTONUP:
+                    mouse = event.pos
+                    if one_player_rect.collidepoint((mouse[0], mouse[1])):
+                        self.player_one = Reversi.Player(BLACK_TILE, self.board)
+                        self.player_two = Reversi.Computer(WHITE_TILE, self.board)
+                        return
+                    elif two_player_rect.collidepoint((mouse[0], mouse[1])):
+                        self.player_one = Reversi.Player(BLACK_TILE, self.board)
+                        self.player_two = Reversi.Player(WHITE_TILE, self.board)
+                        return
 
-                self.player_two.make_move(move[0], move[1])
-                if self.player_one.get_valid_moves() is not []:
-                    self.turn = BLACK_TILE
+            self.display.blit(one_player, one_player_rect)
+            self.display.blit(two_player, two_player_rect)
+            pygame.display.update()
+            self.clock.tick(FPS)
 
     def clicked(self, mousex, mousey):
         for x in range(WIDTH):
@@ -151,6 +192,19 @@ class Game:
         return XMARGIN + x*SPACE+int(SPACE/2), \
             YMARGIN + y*SPACE+int(SPACE/2)
 
+    def rage_quit(self):
+        rage_quit = HUGEFONT.render('RAGE QUIT!!!', True, BLUE, YELLOW)
+        rage_quit_rect = rage_quit.get_rect()
+        rage_quit_rect.center = (int(WINDOWWIDTH/2), int(WINDOWHEIGHT/2))
+
+        while True:
+            self.display.blit(rage_quit, rage_quit_rect)
+            pygame.display.update()
+            self.clock.tick(FPS)
+
+            pygame.quit()
+            sys.exit()
+
     def check_for_quit(self):
         for event in pygame.event.get((QUIT, KEYUP)):
             if event.type == QUIT or (event.type == KEYUP and event.key == K_ESCAPE):
@@ -168,7 +222,6 @@ class Game:
                 no_rect.center = (int(WINDOWWIDTH/2)+60, int(WINDOWHEIGHT/2)+90)
 
                 while True:
-                    self.check_for_quit()
                     for event in pygame.event.get():
                         if event.type == MOUSEBUTTONUP:
                             mousex, mousey = event.pos
@@ -183,6 +236,8 @@ class Game:
                     self.display.blit(no_surf, no_rect)
                     pygame.display.update()
                     self.clock.tick(FPS)
+            else:
+                self.rage_quit()
 
 
 def main():
