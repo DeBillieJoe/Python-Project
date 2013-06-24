@@ -15,7 +15,6 @@ class Board:
         self.board[3][4] = BLACK_TILE
         self.board[4][3] = BLACK_TILE
         self.board[4][4] = WHITE_TILE
-        self.score = {WHITE_TILE: 2, BLACK_TILE: 2}
 
     def reset_board(self):
         self = Board()
@@ -28,6 +27,7 @@ class Player:
     def __init__(self, tile, board):
         self.tile = tile
         self.board = board
+        self.score = 2
 
     def is_on_board(self, mousex, mousey):
         return mousex >= 0 and mousex < WIDTH and \
@@ -84,7 +84,7 @@ class Player:
 
         return valid_moves
 
-    def make_move(self, mousex, mousey):
+    def make_move(self, mousex, mousey, other_player):
         tiles_to_flip = self.is_valid_move(mousex, mousey)
 
         if not tiles_to_flip:
@@ -94,17 +94,18 @@ class Player:
         for move in tiles_to_flip:
             self.board.board[move[0]][move[1]] = self.tile
 
-        if self.tile == WHITE_TILE:
-            other_tile = BLACK_TILE
-        else:
-            other_tile = WHITE_TILE
-
-        self.board.score[self.tile] += 1+len(tiles_to_flip)
-        self.board.score[other_tile] -= len(tiles_to_flip)
-
+        self.score += 1+len(tiles_to_flip)
+        other_player.score -= len(tiles_to_flip)
         return True
 
 
 class Computer(Player):
-    def make_move(self, mousex, mousey):
+    def make_move(self, mousex, mousey, other_player):
+        pass
+
+    def is_on_corner(self, mousex, mousey):
+        return (mousex, mousey) in [(0, 0), (WIDTH, 0),
+                                    (0, HEIGHT), (WIDTH, HEIGHT)]
+
+    def is_edge(self, mousex, mousey):
         pass
