@@ -1,6 +1,7 @@
 import Reversi
 import pygame
 import sys
+import random
 from pygame.locals import *
 
 FPS = 10
@@ -96,7 +97,8 @@ class Game:
                 pygame.display.update()
                 self.clock.tick(FPS)
 
-            player.make_move(move[0], move[1])
+            player.make_move(move[0], move[1], other_player)
+
             if other_player.get_valid_moves() is not []:
                 self.turn = other_player.tile
 
@@ -105,7 +107,7 @@ class Game:
             text = 'Player: %s    Computer: %s'
         else:
             text = 'Player 1: %s    Player 2: %s'
-        score_board = FONT.render(text % (str(self.board.score[BLACK_TILE]), str(self.board.score[WHITE_TILE])), True, WHITE)
+        score_board = FONT.render(text % (str(self.player_one.score), str(self.player_two.score)), True, WHITE)
         score_board_rect = score_board.get_rect()
         score_board_rect.bottomleft = (10, WINDOWHEIGHT-5)
         self.display.blit(score_board, score_board_rect)
@@ -124,7 +126,7 @@ class Game:
 
         turn = FONT.render(text, True, WHITE)
         turn_rect = turn.get_rect()
-        turn_rect.bottomleft = (210, WINDOWHEIGHT-5)
+        turn_rect.bottomleft = (260, WINDOWHEIGHT-5)
         self.display.blit(turn, turn_rect)
 
     def choose_players(self):
@@ -142,13 +144,16 @@ class Game:
             for event in pygame.event.get():
                 if event.type == MOUSEBUTTONUP:
                     mouse = event.pos
+                    choice = random.choice((0, 1))
                     if one_player_rect.collidepoint((mouse[0], mouse[1])):
-                        self.player_one = Reversi.Player(BLACK_TILE, self.board)
-                        self.player_two = Reversi.Computer(WHITE_TILE, self.board)
+                        players = {0: (Reversi.Player(BLACK_TILE, self.board), Reversi.Computer(WHITE_TILE, self.board)),
+                                   1: (Reversi.Computer(BLACK_TILE, self.board), Reversi.Player(WHITE_TILE, self.board))}
+                        self.player_one, self.player_two = players[choice]
                         return
                     elif two_player_rect.collidepoint((mouse[0], mouse[1])):
-                        self.player_one = Reversi.Player(BLACK_TILE, self.board)
-                        self.player_two = Reversi.Player(WHITE_TILE, self.board)
+                        players = {0: (Reversi.Player(BLACK_TILE, self.board), Reversi.Player(WHITE_TILE, self.board)),
+                                   1: (Reversi.Player(WHITE_TILE, self.board), Reversi.Player(BLACK_TILE, self.board))}
+                        self.player_one, self.player_two = players[choice]
                         return
 
             self.display.blit(one_player, one_player_rect)
