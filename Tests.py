@@ -19,7 +19,7 @@ class BoardTest(unittest.TestCase):
         new_board = Reversi.Board()
         new_board.board[2][3] = WHITE_TILE
         new_board.board[2][2] = BLACK_TILE
-        new_board.reset_board()
+        new_board = new_board.reset_board()
 
         self.assertEqual(self.board.board, new_board.board)
 
@@ -66,21 +66,21 @@ class TestGame(unittest.TestCase):
         del self.player_two
 
     def test_make_move(self):
-        self.player_one.make_move(3, 2)
-        self.player_two.make_move(4, 2)
+        self.player_one.make_move(3, 2, self.player_two)
+        self.player_two.make_move(4, 2, self.player_one)
 
         self.assertEqual(self.board.board[3][2], BLACK_TILE)
-        self.assertFalse(self.player_one.make_move(3, 2))
+        self.assertFalse(self.player_one.make_move(3, 2, self.player_two))
 
     def test_score(self):
         self.board.reset_board()
 
-        self.player_one.make_move(3, 2)
-        self.player_two.make_move(4, 2)
-        self.player_one.make_move(5, 3)
-        self.player_two.make_move(2, 2)
+        self.player_one.make_move(3, 2, self.player_two)
+        self.player_two.make_move(4, 2, self.player_one)
+        self.player_one.make_move(5, 3, self.player_two)
+        self.player_two.make_move(2, 2, self.player_one)
 
-        self.assertEqual(self.board.score, {WHITE_TILE: 5, BLACK_TILE: 3})
+        self.assertEqual((self.player_one.score, self.player_two.score), (3, 5))
 
 
 if __name__ == '__main__':
