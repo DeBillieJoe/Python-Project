@@ -150,8 +150,6 @@ class Computer(Player):
             random.shuffle(possible_moves)
             for move in possible_moves:
                 tiles_to_flip = self.is_valid_move(move[0], move[1])
-                if not tiles_to_flip:
-                    continue
                 if len(tiles_to_flip) > best_score:
                     best_score = len(tiles_to_flip)
                     best_move = move
