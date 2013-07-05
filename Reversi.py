@@ -1,14 +1,33 @@
+import random
+
+
 WHITE_TILE = 'WHITE_TILE'
 BLACK_TILE = 'BLACK_TILE'
 EMPTY_SPACE = 'EMPTY_SPACE'
 HEIGHT = 8
 WIDTH = 8
-DIRECTIONS = [(0, 1), (1, 1), (1, 0), (1, -1),
-              (0, -1), (-1, -1), (-1, 0), (-1, 1)]
+DIRECTIONS = ((0, 1), (1, 1), (1, 0), (1, -1),
+              (0, -1), (-1, -1), (-1, 0), (-1, 1))
+
+CORNERS = ((0, 0), (WIDTH-1, 0), (0, HEIGHT-1), (WIDTH-1, HEIGHT-1))
+
+FIRST_ROW = tuple((x, 0) for x in range(2, WIDTH-2))
+FIRST_COLUMN = tuple((0, y) for y in range(2, HEIGHT-2))
+LAST_ROW = tuple((x, HEIGHT-1) for x in range(2, WIDTH-2))
+LAST_COLUMN = tuple((WIDTH-1, y) for y in range(2, HEIGHT-2))
+EDGES = FIRST_ROW+FIRST_COLUMN+LAST_COLUMN+LAST_ROW
+
+BAD_SECTORS = ((1, 0), (1, 1), (0, 1), (WIDTH-2, 0), (WIDTH-1, 1),
+               (WIDTH-2, 1), (0, HEIGHT-2), (HEIGHT-1, 1), (HEIGHT-2, 1),
+               (WIDTH-2, HEIGHT-1), (WIDTH-2, HEIGHT-2), (WIDTH-1, HEIGHT-2))
+
+RISK_SECTORS = tuple((sector[0], sector[1]+1) for sector in FIRST_ROW) + \
+    tuple((sector[0]+1, sector[1]) for sector in FIRST_COLUMN) + \
+    tuple((sector[0], sector[1]-1) for sector in LAST_ROW) + \
+    tuple((sector[0]-1, sector[1]) for sector in LAST_COLUMN)
 
 
 class Board:
-
     def __init__(self):
         self.board = [[EMPTY_SPACE]*HEIGHT for i in range(0, WIDTH)]
         self.board[3][3] = WHITE_TILE
@@ -23,7 +42,6 @@ class Board:
 
 
 class Player:
-
     def __init__(self, tile, board):
         self.tile = tile
         self.board = board
@@ -100,12 +118,68 @@ class Player:
 
 
 class Computer(Player):
-    def make_move(self, mousex, mousey, other_player):
-        pass
+    def computer_move(self):
+        valid_moves = self.get_valid_moves()
+        corner_moves, edge_moves, bad_moves, risk_moves = [], [], [], []
+        possible_moves = []
+        if valid_moves:
+            for move in valid_moves:
+                if self.is_on_corner(move):
+                    corner_moves.append(move)
+                elif self.is_on_edge(move):
+                    edge_moves.append(move)
+                elif self.is_bad_sector(move):
+                    bad_moves.append(move)
+                elif self.is_risk_sector(move):
+                    risk_moves.append(move)
+                else:
+                    possible_moves.append(move)
 
-    def is_on_corner(self, mousex, mousey):
-        return (mousex, mousey) in [(0, 0), (WIDTH, 0),
-                                    (0, HEIGHT), (WIDTH, HEIGHT)]
+            if corner_moves:
+                possible_moves = corner_moves
+            elif edge_moves:
+                possible_moves = edge_moves
+            if not possible_moves:
+                if risk_moves:
+                    possible_moves = risk_moves
+                elif bad_moves:
+                    possible_moves = bad_moves
 
-    def is_edge(self, mousex, mousey):
-        pass
+            best_score = 0
+            best_move = None
+            random.shuffle(possible_moves)
+            for move in possible_moves:
+                tiles_to_flip = self.is_valid_move(move[0], move[1])
+                if not tiles_to_flip:
+                    continue
+                if len(tiles_to_flip) > best_score:
+                    best_score = len(tiles_to_flip)
+                    best_move = move
+
+            return best_move, self.is_valid_move(best_move[0], best_move[1])
+
+    def make_move(self, other_player):
+        if not self.computer_move():
+            return False
+        best_move = self.computer_move()
+        x, y = best_move[0]
+        tiles_to_flip = best_move[1]
+        self.board.board[x][y] = self.tile
+        for move in tiles_to_flip:
+            self.board.board[move[0]][move[1]] = self.tile
+
+        self.score += 1+len(tiles_to_flip)
+        other_player.score -= len(tiles_to_flip)
+        return True
+
+    def is_on_corner(self, sector):
+        return (sector[0], sector[1]) in CORNERS
+
+    def is_on_edge(self, sector):
+        return (sector[0], sector[1]) in EDGES
+
+    def is_bad_sector(self, sector):
+        return (sector[0], sector[1]) in BAD_SECTORS
+
+    def is_risk_sector(self, sector):
+        return (sector[0], sector[1]) in RISK_SECTORS
