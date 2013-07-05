@@ -152,7 +152,7 @@ class Game:
         pygame.display.update()
         self.clock.tick(FPS)
 
-        time.sleep(1)
+        time.sleep(2)
 
         while True:
             self.display.blit(self.END_BACKGROUND, (0, 0))
@@ -316,7 +316,10 @@ class Game:
             else:
                 text = 'Player 2 won %d to %d' % (self.player_two.score, self.player_one.score)
         else:
-            if self.player_one.score > self.player_two.score:
+            if self.player_one.score > self.player_two.score and not \
+                isinstance(self.player_one, Reversi.Computer) or \
+                    self.player_two.score > self.player_one.score and not \
+                    isinstance(self.player_two, Reversi.Computer):
                 text = 'You won %d to %d' % (self.player_one.score, self.player_two.score)
             else:
                 text = 'You lost %d to %d' % (self.player_two.score, self.player_one.score)
