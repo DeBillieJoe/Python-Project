@@ -48,10 +48,12 @@ class Player:
         self.score = 2
 
     def is_on_board(self, mousex, mousey):
+        """Check if mouse position is on board."""
         return mousex >= 0 and mousex < WIDTH and \
             mousey >= 0 and mousey < HEIGHT
 
     def is_valid_move(self, mousex, mousey):
+        """Check if the move is valid."""
         if self.is_on_board(mousex, mousey):
             if self.board.board[mousex][mousey] != EMPTY_SPACE:
                 return False
@@ -119,6 +121,7 @@ class Player:
 
 class Computer(Player):
     def computer_move(self):
+        """Return the best move positon and list of tiles to flip."""
         valid_moves = self.get_valid_moves()
         corner_moves, edge_moves, bad_moves, risk_moves = [], [], [], []
         possible_moves = []
@@ -159,10 +162,12 @@ class Computer(Player):
     def make_move(self, other_player):
         if not self.computer_move():
             return False
+
         best_move = self.computer_move()
         x, y = best_move[0]
         tiles_to_flip = best_move[1]
         self.board.board[x][y] = self.tile
+
         for move in tiles_to_flip:
             self.board.board[move[0]][move[1]] = self.tile
 

@@ -178,9 +178,11 @@ class Game:
                 self.clock.tick(FPS)
 
     def new_game(self):
+        """Show the new game button."""
         self.display.blit(NEW_GAME, NEW_GAME_BUTTON)
 
     def get_score(self):
+        """Show the score information."""
         if self.players == 1:
             if not isinstance(self.player_one, Reversi.Computer):
                 text = 'Player: %s    Computer: %s'
@@ -199,6 +201,7 @@ class Game:
         self.display.blit(score_board, score_board_surface)
 
     def get_turn(self, turn):
+        """Show which player's turn it is."""
         text = None
         if self.players == 1:
             for player in [self.player_one, self.player_two]:
@@ -217,6 +220,10 @@ class Game:
         self.display.blit(turn, turn_surface)
 
     def choose_players(self):
+        """
+        Get the user choice to play against the computer or a friend.
+        Choose which player play first.
+        """
         while True:
             self.check_for_quit()
 
@@ -247,6 +254,7 @@ class Game:
             self.clock.tick(FPS)
 
     def clicked(self, mousex, mousey):
+        """Check if mouse click is on square."""
         for x in range(WIDTH):
             for y in range(HEIGHT):
                 if mousex > x*SPACE+X_OFFSET and \
@@ -284,6 +292,7 @@ class Game:
                                        (centerx, centery), int(SPACE/2)-4)
 
     def get_center(self, x, y):
+        """Return the coordinates of the square's center."""
         return X_OFFSET + x*SPACE+int(SPACE/2), \
             Y_OFFSET + y*SPACE+int(SPACE/2)
 
