@@ -273,7 +273,7 @@ class Game:
 
         for x in range(WIDTH):
             for y in range(HEIGHT):
-                centerx, centery = self.board_to_pixel_coord(x, y)
+                centerx, centery = self.get_center(x, y)
                 if board.board[x][y] in [BLACK_TILE, WHITE_TILE]:
                     if board.board[x][y] == WHITE_TILE:
                         tile_color = WHITE
@@ -283,7 +283,7 @@ class Game:
                     pygame.draw.circle(self.display, tile_color,
                                        (centerx, centery), int(SPACE/2)-4)
 
-    def board_to_pixel_coord(self, x, y):
+    def get_center(self, x, y):
         return X_OFFSET + x*SPACE+int(SPACE/2), \
             Y_OFFSET + y*SPACE+int(SPACE/2)
 
