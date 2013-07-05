@@ -80,7 +80,42 @@ class TestGame(unittest.TestCase):
         self.player_one.make_move(5, 3, self.player_two)
         self.player_two.make_move(2, 2, self.player_one)
 
-        self.assertEqual((self.player_one.score, self.player_two.score), (3, 5))
+        score = (self.player_one.score, self.player_two.score)
+        self.assertEqual(score, (3, 5))
+
+
+class TestComputer(unittest.TestCase):
+    def setUp(self):
+        self.board = Reversi.Board()
+        self.player_one = Reversi.Player(BLACK_TILE, self.board)
+        self.player_two = Reversi.Computer(WHITE_TILE, self.board)
+
+    def tearDown(self):
+        del self.board
+        del self.player_one
+        del self.player_two
+
+    def test_good_moves(self):
+        for i in range(1, 6):
+            self.board.board[4][i] = WHITE_TILE
+            if i != 4:
+                self.board.board[i][4] = BLACK_TILE
+
+        self.board.board[3][2] = BLACK_TILE
+        self.board.board[5][2] = BLACK_TILE
+        self.board.board[2][5] = BLACK_TILE
+
+        move = self.player_two.computer_move()
+        self.player_two.make_move(self.player_one)
+        self.assertEqual(move, ((0, 4), [(3, 4), (2, 4), (1, 4)]))
+
+        self.board.board[1][6] = BLACK_TILE
+        second_move = self.player_two.computer_move()
+        self.player_two.make_move(self.player_one)
+        self.assertEqual(second_move, ((0, 7), [(2, 5), (1, 6)]))
+
+    def test_bad_moves(self):
+        pass
 
 
 if __name__ == '__main__':
