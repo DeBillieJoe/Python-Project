@@ -186,7 +186,7 @@ class Game:
         score_board = FONT.render(text % (str(self.player_one.score), str(self.player_two.score)), True, WHITE)
         score_board_surface = score_board.get_rect()
         score_board_surface.bottomleft = (10, WINDOWHEIGHT-5)
-        self.display.blit(score_board, score_board_button)
+        self.display.blit(score_board, score_board_surface)
 
     def get_turn(self, turn):
         text = None
