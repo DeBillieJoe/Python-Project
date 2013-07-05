@@ -1,6 +1,7 @@
 import Reversi
 import pygame
 import sys
+import time
 import random
 from pygame.locals import *
 
@@ -12,38 +13,72 @@ HEIGHT = Reversi.HEIGHT
 BLACK_TILE = Reversi.BLACK_TILE
 WHITE_TILE = Reversi.WHITE_TILE
 SPACE = 50
-XMARGIN = int((WINDOWWIDTH-(WIDTH*SPACE))/2)
-YMARGIN = int((WINDOWHEIGHT-(HEIGHT*SPACE))/2)
+X_OFFSET = int((WINDOWWIDTH-(WIDTH*SPACE))/2)
+Y_OFFSET = int((WINDOWHEIGHT-(HEIGHT*SPACE))/2)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
-RED = (255, 0, 1000)
+BORDO = (128, 0, 0)
 BLUE = (0, 0, 255)
-YELLOW = (255, 255, 0)
-
+DARK_GREEN = (0, 51, 0)
+GREEN = (0, 145, 0)
+ORANGE = (255, 165, 0)
 
 pygame.init()
-FONT = pygame.font.Font('freesansbold.ttf', 16)
-BIGFONT = pygame.font.Font('freesansbold.ttf', 24)
+FONT = pygame.font.Font('freesansbold.ttf', 20)
+BIGFONT = pygame.font.Font('freesansbold.ttf', 36)
 HUGEFONT = pygame.font.Font('freesansbold.ttf', 72)
+
+NEW_GAME = FONT.render('New Game', True, WHITE, BORDO)
+NEW_GAME_BUTTON = NEW_GAME.get_rect()
+NEW_GAME_BUTTON.topright = (WINDOWWIDTH-15, 15)
+
+PLAY_AGAIN = BIGFONT.render('Do you want to play again?', True, WHITE, DARK_GREEN)
+PLAY_AGAIN_BUTTON = PLAY_AGAIN.get_rect()
+PLAY_AGAIN_BUTTON.center = (int(WINDOWWIDTH/2), int(WINDOWHEIGHT/2)+50)
+
+YES = BIGFONT.render('Yes', True, WHITE, DARK_GREEN)
+YES_BUTTON = YES.get_rect()
+YES_BUTTON.center = (int(WINDOWWIDTH/2)-60, int(WINDOWHEIGHT/2)+100)
+
+NO = BIGFONT.render('No', True, WHITE, DARK_GREEN)
+NO_BUTTON = NO.get_rect()
+NO_BUTTON.center = (int(WINDOWWIDTH/2)+60, int(WINDOWHEIGHT/2)+100)
+
+RAGE_QUIT = HUGEFONT.render('RAGE QUIT!!!', True, WHITE, BLACK)
+RAGE_QUIT_SURFACE = RAGE_QUIT.get_rect()
+RAGE_QUIT_SURFACE.center = (int(WINDOWWIDTH/2), int(WINDOWHEIGHT/2))
+
+QUIT_MESSAGE = 'Do you really want to quit?'
+WANNA_QUIT = BIGFONT.render(QUIT_MESSAGE, True, WHITE, DARK_GREEN)
+WANNA_QUIT_BUTTON = WANNA_QUIT.get_rect()
+WANNA_QUIT_BUTTON.center = (int(WINDOWWIDTH/2), int(WINDOWHEIGHT/2)-50)
+
+ONE_PLAYER = BIGFONT.render('Player vs Computer', True, WHITE, BORDO)
+ONE_PLAYER_BUTTON = ONE_PLAYER.get_rect()
+ONE_PLAYER_BUTTON.center = (int(WINDOWWIDTH/2), int(WINDOWHEIGHT/2)-66)
+
+TWO_PLAYER = BIGFONT.render('Player 1 vs Player 2', True, WHITE, BORDO)
+TWO_PLAYER_BUTTON = TWO_PLAYER.get_rect()
+TWO_PLAYER_BUTTON.center = (int(WINDOWWIDTH/2), int(WINDOWHEIGHT/2)+66)
 
 
 class Game:
-    def __init__(self, b_image, bg_image):
+
+    def __init__(self):
         self.board = Reversi.Board()
         self.clock = pygame.time.Clock()
         self.display = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
+        self.BG = pygame.Surface(self.display.get_size())
+        self.BG.fill(BORDO)
+
+        self.END_BACKGROUND = pygame.Surface(self.display.get_size())
+        self.END_BACKGROUND.fill(DARK_GREEN)
+
         pygame.display.set_caption('Reversi')
+        self.players = 0
         self.player_one = None
         self.player_two = None
         self.turn = None
-
-        self.b_image = pygame.image.load(b_image)
-        self.b_image = pygame.transform.smoothscale(self.b_image, (WIDTH*SPACE, HEIGHT*SPACE))
-        b_image_rect = self.b_image.get_rect()
-        b_image_rect.topleft = (XMARGIN, YMARGIN)
-        self.bg_image = pygame.image.load(bg_image)
-        self.bg_image = pygame.transform.smoothscale(self.bg_image, (WINDOWWIDTH, WINDOWHEIGHT))
-        self.bg_image.blit(self.b_image, b_image_rect)
 
         while True:
             if self.run_game() is False:
@@ -56,15 +91,13 @@ class Game:
         self.draw_board(self.board)
         self.choose_players()
 
-        new_game_surf = FONT.render('New Game', True, WHITE, RED)
-        new_game_rect = new_game_surf.get_rect()
-        new_game_rect.topright = (WINDOWWIDTH-15, 15)
-
-        self.display.blit(new_game_surf, new_game_rect)
+        self.new_game()
         pygame.display.update()
         self.clock.tick(FPS)
 
         self.check_for_quit()
+        player = None
+        other_player = None
         while True:
             if self.player_one.tile == self.turn:
                 player = self.player_one
@@ -76,48 +109,91 @@ class Game:
             if player.get_valid_moves() == []:
                 break
 
-            move = None
-            while not move:
-                self.check_for_quit()
-
-                for event in pygame.event.get():
-                    if event.type == MOUSEBUTTONUP:
-                        mousex, mousey = event.pos
-                        if new_game_rect.collidepoint(mousex, mousey):
-                            return True
-
-                        move = self.clicked(mousex, mousey)
-                        if move is not None and not player.is_valid_move(move[0], move[1]):
-                            move = None
-
+            if isinstance(player, Reversi.Computer):
                 self.draw_board(self.board)
                 self.get_score()
                 self.get_turn(self.turn)
-                self.display.blit(new_game_surf, new_game_rect)
+                self.new_game()
                 pygame.display.update()
                 self.clock.tick(FPS)
+                time.sleep(1)
 
-            player.make_move(move[0], move[1], other_player)
+                player.make_move(other_player)
+
+            else:
+                move = None
+                while not move:
+                    self.check_for_quit()
+
+                    for event in pygame.event.get():
+                        if event.type == MOUSEBUTTONUP:
+                            mousex, mousey = event.pos
+                            if NEW_GAME_BUTTON.collidepoint(mousex, mousey):
+                                return True
+
+                            move = self.clicked(mousex, mousey)
+                            if move is not None and not player.is_valid_move(move[0], move[1]):
+                                move = None
+
+                    self.draw_board(self.board)
+                    self.get_score()
+                    self.get_turn(self.turn)
+                    self.new_game()
+                    pygame.display.update()
+                    self.clock.tick(FPS)
+
+                player.make_move(move[0], move[1], other_player)
 
             if other_player.get_valid_moves() is not []:
                 self.turn = other_player.tile
 
+        self.draw_board(self.board)
+        self.get_score()
+        pygame.display.update()
+        self.clock.tick(FPS)
+
+        time.sleep(1)
+
+        while True:
+            self.display.blit(self.END_BACKGROUND, (0, 0))
+            self.get_winner()
+            self.display.blit(PLAY_AGAIN, PLAY_AGAIN_BUTTON)
+            self.display.blit(YES, YES_BUTTON)
+            self.display.blit(NO, NO_BUTTON)
+            pygame.display.update()
+            self.clock.tick(FPS)
+
+            self.check_for_quit()
+            for event in pygame.event.get():
+                if event.type == MOUSEBUTTONUP:
+                    mousex, mousey = event.pos
+                    if YES_BUTTON.collidepoint((mousex, mousey)):
+                        return True
+                    elif NO_BUTTON.collidepoint((mousex, mousey)):
+                        return False
+
+                pygame.display.update()
+                self.clock.tick(FPS)
+
+    def new_game(self):
+        self.display.blit(NEW_GAME, NEW_GAME_BUTTON)
+
     def get_score(self):
-        if isinstance(self.player_two, Reversi.Computer):
+        if self.players == 1:
             text = 'Player: %s    Computer: %s'
         else:
             text = 'Player 1: %s    Player 2: %s'
         score_board = FONT.render(text % (str(self.player_one.score), str(self.player_two.score)), True, WHITE)
-        score_board_rect = score_board.get_rect()
-        score_board_rect.bottomleft = (10, WINDOWHEIGHT-5)
-        self.display.blit(score_board, score_board_rect)
+        score_board_surface = score_board.get_rect()
+        score_board_surface.bottomleft = (10, WINDOWHEIGHT-5)
+        self.display.blit(score_board, score_board_button)
 
     def get_turn(self, turn):
-        if isinstance(self.player_two, Reversi.Computer):
-            if self.turn == self.player_one.tile:
-                text = "Player's turn!"
-            else:
-                text = "Computer's turn!"
+        text = None
+        if self.players == 1:
+            for player in [self.player_one, self.player_two]:
+                if not isinstance(player, Reversi.Computer) and self.turn == player.tile:
+                    text = "Player's turn!"
         else:
             if self.turn == self.player_one.tile:
                 text = "Player 1's turn!"
@@ -125,19 +201,11 @@ class Game:
                 text = "Player 2's turn!"
 
         turn = FONT.render(text, True, WHITE)
-        turn_rect = turn.get_rect()
-        turn_rect.bottomleft = (260, WINDOWHEIGHT-5)
-        self.display.blit(turn, turn_rect)
+        turn_surface = turn.get_rect()
+        turn_surface.bottomleft = (280, WINDOWHEIGHT-5)
+        self.display.blit(turn, turn_surface)
 
     def choose_players(self):
-        one_player = BIGFONT.render('Player vs Computer', True, BLUE, YELLOW)
-        one_player_rect = one_player.get_rect()
-        one_player_rect.center = (int(WINDOWWIDTH/2), int(WINDOWHEIGHT/2)-66)
-
-        two_player = BIGFONT.render('Player 1 vs Player 2', True, BLUE, YELLOW)
-        two_player_rect = two_player.get_rect()
-        two_player_rect.center = (int(WINDOWWIDTH/2), int(WINDOWHEIGHT/2)+66)
-
         while True:
             self.check_for_quit()
 
@@ -145,40 +213,43 @@ class Game:
                 if event.type == MOUSEBUTTONUP:
                     mouse = event.pos
                     choice = random.choice((0, 1))
-                    if one_player_rect.collidepoint((mouse[0], mouse[1])):
+                    if ONE_PLAYER_BUTTON.collidepoint((mouse[0], mouse[1])):
                         players = {0: (Reversi.Player(BLACK_TILE, self.board), Reversi.Computer(WHITE_TILE, self.board)),
                                    1: (Reversi.Computer(BLACK_TILE, self.board), Reversi.Player(WHITE_TILE, self.board))}
                         self.player_one, self.player_two = players[choice]
+                        self.players = 1
                         return
-                    elif two_player_rect.collidepoint((mouse[0], mouse[1])):
+                    elif TWO_PLAYER_BUTTON.collidepoint((mouse[0], mouse[1])):
                         players = {0: (Reversi.Player(BLACK_TILE, self.board), Reversi.Player(WHITE_TILE, self.board)),
                                    1: (Reversi.Player(WHITE_TILE, self.board), Reversi.Player(BLACK_TILE, self.board))}
                         self.player_one, self.player_two = players[choice]
+                        self.players = 2
                         return
 
-            self.display.blit(one_player, one_player_rect)
-            self.display.blit(two_player, two_player_rect)
+            self.display.blit(ONE_PLAYER, ONE_PLAYER_BUTTON)
+            self.display.blit(TWO_PLAYER, TWO_PLAYER_BUTTON)
             pygame.display.update()
             self.clock.tick(FPS)
 
     def clicked(self, mousex, mousey):
         for x in range(WIDTH):
             for y in range(HEIGHT):
-                if mousex > x*SPACE+XMARGIN and \
-                   mousex < (x+1)*SPACE+XMARGIN and \
-                   mousey > y*SPACE+YMARGIN and \
-                   mousey < (y+1)*SPACE+YMARGIN:
+                if mousex > x*SPACE+X_OFFSET and \
+                   mousex < (x+1)*SPACE+X_OFFSET and \
+                   mousey > y*SPACE+Y_OFFSET and \
+                   mousey < (y+1)*SPACE+Y_OFFSET:
                     return (x, y)
         return None
 
     def draw_board(self, board):
-        self.display.blit(self.bg_image, self.bg_image.get_rect())
+        self.display.blit(self.BG, (0, 0))
+        pygame.draw.rect(self.display, GREEN, (X_OFFSET, Y_OFFSET, SPACE*WIDTH, SPACE*HEIGHT))
 
         for spot in [(x, x) for x in range(WIDTH + 1)]:
-            left = [(spot[0]*SPACE)+XMARGIN, YMARGIN]
-            right = [(spot[0]*SPACE)+XMARGIN, YMARGIN+(HEIGHT*SPACE)]
-            up = [XMARGIN, (spot[1]*SPACE)+YMARGIN]
-            down = [XMARGIN+(WIDTH*SPACE), (spot[1] * SPACE) + YMARGIN]
+            left = [(spot[0]*SPACE)+X_OFFSET, Y_OFFSET]
+            right = [(spot[0]*SPACE)+X_OFFSET, Y_OFFSET+(HEIGHT*SPACE)]
+            up = [X_OFFSET, (spot[1]*SPACE)+Y_OFFSET]
+            down = [X_OFFSET+(WIDTH*SPACE), (spot[1] * SPACE) + Y_OFFSET]
             pygame.draw.line(self.display, BLACK, (left[0], left[1]), (right[0], right[1]))
             pygame.draw.line(self.display, BLACK, (up[0], up[1]), (down[0], down[1]))
 
@@ -194,59 +265,71 @@ class Game:
                     pygame.draw.circle(self.display, tile_color, (centerx, centery), int(SPACE/2)-4)
 
     def board_to_pixel_coord(self, x, y):
-        return XMARGIN + x*SPACE+int(SPACE/2), \
-            YMARGIN + y*SPACE+int(SPACE/2)
+        return X_OFFSET + x*SPACE+int(SPACE/2), \
+            Y_OFFSET + y*SPACE+int(SPACE/2)
 
     def rage_quit(self):
-        rage_quit = HUGEFONT.render('RAGE QUIT!!!', True, BLUE, YELLOW)
-        rage_quit_rect = rage_quit.get_rect()
-        rage_quit_rect.center = (int(WINDOWWIDTH/2), int(WINDOWHEIGHT/2))
+        rg_background = pygame.Surface(self.display.get_size())
+        rg_background.fill(BLACK)
 
         while True:
-            self.display.blit(rage_quit, rage_quit_rect)
+            self.display.blit(rg_background, (0, 0))
+            self.display.blit(RAGE_QUIT, RAGE_QUIT_SURFACE)
             pygame.display.update()
             self.clock.tick(FPS)
-
+            time.sleep(0.5)
             pygame.quit()
             sys.exit()
 
     def check_for_quit(self):
         for event in pygame.event.get((QUIT, KEYUP)):
             if event.type == QUIT or (event.type == KEYUP and event.key == K_ESCAPE):
-                text = 'Do you really want to quit?'
-                text_surf = BIGFONT.render(text, True, BLUE, YELLOW)
-                text_rect = text_surf.get_rect()
-                text_rect.center = (int(WINDOWWIDTH/2), int(WINDOWHEIGHT/2)+50)
-
-                yes_surf = BIGFONT.render('Yes', True, BLUE, YELLOW)
-                yes_rect = yes_surf.get_rect()
-                yes_rect.center = (int(WINDOWWIDTH/2)-60, int(WINDOWHEIGHT/2)+90)
-
-                no_surf = BIGFONT.render('No', True, BLUE, YELLOW)
-                no_rect = no_surf.get_rect()
-                no_rect.center = (int(WINDOWWIDTH/2)+60, int(WINDOWHEIGHT/2)+90)
-
                 while True:
+                    self.display.blit(self.END_BACKGROUND, (0, 0))
+                    self.display.blit(WANNA_QUIT, WANNA_QUIT_BUTTON)
+                    self.display.blit(YES, YES_BUTTON)
+                    self.display.blit(NO, NO_BUTTON)
+                    pygame.display.update()
+                    self.clock.tick(FPS)
+
                     for event in pygame.event.get():
                         if event.type == MOUSEBUTTONUP:
                             mousex, mousey = event.pos
-                            if yes_rect.collidepoint((mousex, mousey)):
+                            if YES_BUTTON.collidepoint((mousex, mousey)):
                                 pygame.quit()
                                 sys.exit()
-                            elif no_rect.collidepoint((mousex, mousey)):
+                            elif NO_BUTTON.collidepoint((mousex, mousey)):
+                                self.display.blit(self.BG, (0, 0))
+                                self.draw_board(self.board)
                                 return True
-
-                    self.display.blit(text_surf, text_rect)
-                    self.display.blit(yes_surf, yes_rect)
-                    self.display.blit(no_surf, no_rect)
-                    pygame.display.update()
-                    self.clock.tick(FPS)
             else:
                 self.rage_quit()
 
+    def get_winner(self):
+        text = None
+        if self.player_one.score == self.player_two.score:
+            text = "It's a tie!"
+
+        if self.players is 2:
+            if self.player_one.score > self.player_two.score:
+                text = 'Player 1 won %d to %d!' % (self.player_one.score, self.player_two.score)
+            else:
+                text = 'Player 2 won %d to %d' % (self.player_two.score, self.player_one.score)
+        else:
+            if self.player_one.score > self.player_two.score:
+                text = 'You won %d to %d' % (self.player_one.score, self.player_two.score)
+            else:
+                text = 'You lost %d to %d' % (self.player_two.score, self.player_one.score)
+
+        winner = BIGFONT.render(text, True, WHITE, DARK_GREEN)
+        winner_button = winner.get_rect()
+        winner_button.center = (int(WINDOWWIDTH/2), int(WINDOWHEIGHT/2)-50)
+
+        self.display.blit(winner, winner_button)
+
 
 def main():
-    game = Game('board.jpg', 'background.jpg')
+    game = Game()
 
     return game
 
