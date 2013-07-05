@@ -114,8 +114,35 @@ class TestComputer(unittest.TestCase):
         self.player_two.make_move(self.player_one)
         self.assertEqual(second_move, ((0, 7), [(2, 5), (1, 6)]))
 
+    def test_risk_moves(self):
+        for i in range(0, 5):
+            self.board.board[i][4] = WHITE_TILE
+            self.board.board[4][i] = WHITE_TILE
+        self.board.board[2][2] = BLACK_TILE
+        self.board.board[3][2] = BLACK_TILE
+        self.board.board[2][3] = BLACK_TILE
+        self.board.board[3][3] = BLACK_TILE
+
+        move = self.player_two.computer_move()
+        self.player_two.make_move(self.player_one)
+        self.assertTrue(move[0] in [(1, 2), (1, 3), (2, 1), (3, 1)])
+
     def test_bad_moves(self):
-        pass
+        for i in range(0, 5):
+            self.board.board[i][4] = WHITE_TILE
+            self.board.board[4][i] = WHITE_TILE
+        for i in range(2, 4):
+            for j in range(0, 4):
+                self.board.board[i][j] = BLACK_TILE
+                self.board.board[j][i] = BLACK_TILE
+        move = self.player_two.computer_move()
+        self.assertTrue(move[0] in [(0, 1), (1, 1), (1, 0)])
+        self.board.board[0][0] = BLACK_TILE
+        self.board.board[0][1] = BLACK_TILE
+        self.board.board[1][0] = BLACK_TILE
+        self.board.board[1][1] = BLACK_TILE
+
+        self.assertFalse(self.player_two.make_move(self.player_one))
 
 
 if __name__ == '__main__':
