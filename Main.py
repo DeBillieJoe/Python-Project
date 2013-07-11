@@ -62,6 +62,18 @@ TWO_PLAYER = BIGFONT.render('Player 1 vs Player 2', True, WHITE, BORDO)
 TWO_PLAYER_BUTTON = TWO_PLAYER.get_rect()
 TWO_PLAYER_BUTTON.center = (int(WINDOWWIDTH/2), int(WINDOWHEIGHT/2)+66)
 
+EASY = BIGFONT.render('Easy', True, WHITE, BORDO)
+EASY_BUTTON = EASY.get_rect()
+EASY_BUTTON.center = (int(WINDOWWIDTH/2), int(WINDOWHEIGHT/2)-75)
+
+MEDIUM = BIGFONT.render('Medium', True, WHITE, BORDO)
+MEDIUM_BUTTON = MEDIUM.get_rect()
+MEDIUM_BUTTON.center = (int(WINDOWWIDTH/2), int(WINDOWHEIGHT/2))
+
+HARD = BIGFONT.render('Hard', True, WHITE, BORDO)
+HARD_BUTTON = HARD.get_rect()
+HARD_BUTTON.center = (int(WINDOWWIDTH/2), int(WINDOWHEIGHT/2)+75)
+
 
 class Game:
 
@@ -221,7 +233,7 @@ class Game:
 
     def choose_players(self):
         """
-        Get the user choice to play against the computer or a friend.
+        Let the user choose to play against the computer or a friend.
         Choose which player play first.
         """
         while True:
@@ -241,6 +253,11 @@ class Game:
                                   Reversi.Player(BLACK_TILE, self.board))}
                     if ONE_PLAYER_BUTTON.collidepoint((mouse[0], mouse[1])):
                         self.player_one, self.player_two = rival[choice]
+                        if isinstance(self.player_one, Reversi.Computer):
+                            self.choose_difficulty(self.player_one)
+                        else:
+                            self.choose_difficulty(self.player_two)
+
                         self.players = 1
                         return
                     elif TWO_PLAYER_BUTTON.collidepoint((mouse[0], mouse[1])):
@@ -250,6 +267,33 @@ class Game:
 
             self.display.blit(ONE_PLAYER, ONE_PLAYER_BUTTON)
             self.display.blit(TWO_PLAYER, TWO_PLAYER_BUTTON)
+            pygame.display.update()
+            self.clock.tick(FPS)
+
+    def choose_difficulty(self, computer):
+        """
+        Let the user to choose game's difficulty.
+        """
+        while True:
+            self.check_for_quit()
+
+            for event in pygame.event.get():
+                if event.type == MOUSEBUTTONUP:
+                    mouse = event.pos
+                    if EASY_BUTTON.collidepoint((mouse[0], mouse[1])):
+                        computer.set_difficulty('Easy')
+                        return
+                    elif MEDIUM_BUTTON.collidepoint((mouse[0], mouse[1])):
+                        computer.set_difficulty('Medium')
+                        return
+                    elif HARD_BUTTON.collidepoint((mouse[0], mouse[1])):
+                        computer.set_difficulty('Hard')
+                        return
+
+            self.draw_board(self.board)
+            self.display.blit(EASY, EASY_BUTTON)
+            self.display.blit(MEDIUM, MEDIUM_BUTTON)
+            self.display.blit(HARD, HARD_BUTTON)
             pygame.display.update()
             self.clock.tick(FPS)
 
@@ -270,14 +314,12 @@ class Game:
                          SPACE*WIDTH, SPACE*HEIGHT))
 
         for spot in [(x, x) for x in range(WIDTH + 1)]:
-            left = [(spot[0]*SPACE)+X_OFFSET, Y_OFFSET]
-            right = [(spot[0]*SPACE)+X_OFFSET, Y_OFFSET+(HEIGHT*SPACE)]
-            up = [X_OFFSET, (spot[1]*SPACE)+Y_OFFSET]
-            down = [X_OFFSET+(WIDTH*SPACE), (spot[1] * SPACE) + Y_OFFSET]
-            pygame.draw.line(self.display, BLACK, (left[0], left[1]),
-                             (right[0], right[1]))
-            pygame.draw.line(self.display, BLACK, (up[0], up[1]),
-                             (down[0], down[1]))
+            left = ((spot[0]*SPACE)+X_OFFSET, Y_OFFSET)
+            right = ((spot[0]*SPACE)+X_OFFSET, Y_OFFSET+(HEIGHT*SPACE))
+            up = (X_OFFSET, (spot[1]*SPACE)+Y_OFFSET)
+            down = (X_OFFSET+(WIDTH*SPACE), (spot[1] * SPACE) + Y_OFFSET)
+            pygame.draw.line(self.display, BLACK, left, right)
+            pygame.draw.line(self.display, BLACK, up, down)
 
         for x in range(WIDTH):
             for y in range(HEIGHT):
