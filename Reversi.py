@@ -120,7 +120,18 @@ class Player:
 
 
 class Computer(Player):
-    def computer_move(self):
+    def __init__(self, tile, board):
+        super().__init__(tile, board)
+        self.difficulty = None
+        self.difficulties = {'Easy': self.easy_move,
+                             'Medium': self.medium_move,
+                             'Hard': self.hard_move}
+
+    def set_difficulty(self, difficulty):
+        self.difficulty = difficulty
+        return
+
+    def hard_move(self):
         """Return the best move positon and list of tiles to flip."""
         valid_moves = self.get_valid_moves()
         corner_moves, edge_moves, bad_moves, risk_moves = [], [], [], []
@@ -159,17 +170,46 @@ class Computer(Player):
 
             return best_move, self.is_valid_move(best_move[0], best_move[1])
 
+    def easy_move(self):
+        """Return random possible move and list of tiles to flip."""
+        valid_moves = self.get_valid_moves()
+        move = None
+        if valid_moves:
+            random.shuffle(valid_moves)
+            choice = random.choice(range(len(valid_moves)))
+            move = valid_moves[choice]
+
+            return move, self.is_valid_move(move[0], move[1])
+
+    def medium_move(self):
+        """Return good move and list of tiles to flip."""
+        valid_moves = self.get_valid_moves()
+        best_move = None
+        best_score = 0
+        if valid_moves:
+            random.shuffle(valid_moves)
+            for move in valid_moves:
+                if self.is_on_corner(move):
+                    return move, self.is_valid_move(move[0], move[1])
+
+                score = len(self.is_valid_move(move[0], move[1]))
+                if score > best_score:
+                    best_score = score
+                    best_move = move
+
+            return best_move, self.is_valid_move(best_move[0], best_move[1])
+
     def make_move(self, other_player):
-        if not self.computer_move():
+        if not self.difficulties[self.difficulty]():
             return False
 
-        best_move = self.computer_move()
+        best_move = self.difficulties[self.difficulty]()
         x, y = best_move[0]
         tiles_to_flip = best_move[1]
         self.board.board[x][y] = self.tile
 
-        for move in tiles_to_flip:
-            self.board.board[move[0]][move[1]] = self.tile
+        for sector in tiles_to_flip:
+            self.board.board[sector[0]][sector[1]] = self.tile
 
         self.score += 1+len(tiles_to_flip)
         other_player.score -= len(tiles_to_flip)
