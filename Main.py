@@ -201,10 +201,7 @@ class Game:
             else:
                 text = 'Computer: %s    Player: %s'
         else:
-            if self.player_one.tile == BLACK_TILE:
-                text = 'Player 1: %s    Player 2: %s'
-            else:
-                text = 'Player 2: %s    Player 1: %s'
+            text = 'Player 1: %s    Player 2: %s'
 
         score = (str(self.player_one.score), str(self.player_two.score))
         score_board = FONT.render(text % score, True, WHITE)
@@ -248,9 +245,7 @@ class Game:
                              1: (Reversi.Computer(BLACK_TILE, self.board),
                                  Reversi.Player(WHITE_TILE, self.board))}
                     rivals = {0: (Reversi.Player(BLACK_TILE, self.board),
-                                  Reversi.Player(WHITE_TILE, self.board)),
-                              1: (Reversi.Player(WHITE_TILE, self.board),
-                                  Reversi.Player(BLACK_TILE, self.board))}
+                                  Reversi.Player(WHITE_TILE, self.board))}
                     if ONE_PLAYER_BUTTON.collidepoint((mouse[0], mouse[1])):
                         self.player_one, self.player_two = rival[choice]
                         if isinstance(self.player_one, Reversi.Computer):
@@ -261,7 +256,7 @@ class Game:
                         self.players = 1
                         return
                     elif TWO_PLAYER_BUTTON.collidepoint((mouse[0], mouse[1])):
-                        self.player_one, self.player_two = rivals[choice]
+                        self.player_one, self.player_two = rivals[0]
                         self.players = 2
                         return
 
