@@ -95,6 +95,38 @@ class TestComputer(unittest.TestCase):
         del self.player_one
         del self.player_two
 
+    def test_difficulty(self):
+        self.player_two.set_difficulty('Easy')
+        self.assertEqual(self.player_two.difficulty, 'Easy')
+
+    def test_easy_move(self):
+        self.player_two.set_difficulty('Easy')
+        self.assertTrue(self.player_two.make_move(self.player_one))
+
+    def test_meduim_move(self):
+        self.board.board[3][3] = BLACK_TILE
+        self.board.board[4][1] = BLACK_TILE
+        self.board.board[4][2] = BLACK_TILE
+        first_move = self.player_two.medium_move()
+        self.assertEqual(first_move, ((4, 0), [(4, 3), (4, 2), (4, 1)]))
+        self.board.board[2][2] = BLACK_TILE
+        self.board.board[1][1] = BLACK_TILE
+        second_move = self.player_two.medium_move()
+        self.assertEqual(second_move, ((0, 0), [(3, 3), (2, 2), (1, 1)]))
+
+
+class HardComputerMove(unittest.TestCase):
+    def setUp(self):
+        self.board = Reversi.Board()
+        self.player_one = Reversi.Player(BLACK_TILE, self.board)
+        self.player_two = Reversi.Computer(WHITE_TILE, self.board)
+        self.player_two.set_difficulty('Hard')
+
+    def tearDown(self):
+        del self.board
+        del self.player_one
+        del self.player_two
+
     def test_good_moves(self):
         for i in range(1, 6):
             self.board.board[4][i] = WHITE_TILE
@@ -105,12 +137,12 @@ class TestComputer(unittest.TestCase):
         self.board.board[5][2] = BLACK_TILE
         self.board.board[2][5] = BLACK_TILE
 
-        move = self.player_two.computer_move()
+        move = self.player_two.hard_move()
         self.player_two.make_move(self.player_one)
         self.assertEqual(move, ((0, 4), [(3, 4), (2, 4), (1, 4)]))
 
         self.board.board[1][6] = BLACK_TILE
-        second_move = self.player_two.computer_move()
+        second_move = self.player_two.hard_move()
         self.player_two.make_move(self.player_one)
         self.assertEqual(second_move, ((0, 7), [(2, 5), (1, 6)]))
 
@@ -123,7 +155,7 @@ class TestComputer(unittest.TestCase):
         self.board.board[2][3] = BLACK_TILE
         self.board.board[3][3] = BLACK_TILE
 
-        move = self.player_two.computer_move()
+        move = self.player_two.hard_move()
         self.player_two.make_move(self.player_one)
         self.assertTrue(move[0] in [(1, 2), (1, 3), (2, 1), (3, 1)])
 
@@ -135,13 +167,14 @@ class TestComputer(unittest.TestCase):
             for j in range(0, 4):
                 self.board.board[i][j] = BLACK_TILE
                 self.board.board[j][i] = BLACK_TILE
-        move = self.player_two.computer_move()
+        move = self.player_two.hard_move()
         self.assertTrue(move[0] in [(0, 1), (1, 1), (1, 0)])
         self.board.board[0][0] = BLACK_TILE
         self.board.board[0][1] = BLACK_TILE
         self.board.board[1][0] = BLACK_TILE
         self.board.board[1][1] = BLACK_TILE
 
+        self.player_two.set_difficulty('Hard')
         self.assertFalse(self.player_two.make_move(self.player_one))
 
 
