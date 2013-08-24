@@ -129,7 +129,6 @@ class Computer(Player):
 
     def set_difficulty(self, difficulty):
         self.difficulty = difficulty
-        return
 
     def hard_move(self):
         """Return the best move positon and list of tiles to flip."""
