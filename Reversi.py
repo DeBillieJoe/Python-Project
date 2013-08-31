@@ -30,10 +30,10 @@ RISK_SECTORS = tuple((sector[0], sector[1]+1) for sector in FIRST_ROW) + \
 class Board:
     def __init__(self):
         self.board = [[EMPTY_SPACE]*HEIGHT for i in range(0, WIDTH)]
-        self.board[3][3] = WHITE_TILE
-        self.board[3][4] = BLACK_TILE
-        self.board[4][3] = BLACK_TILE
-        self.board[4][4] = WHITE_TILE
+        self.board[int(WIDTH/2)-1][int(HEIGHT/2)-1] = WHITE_TILE
+        self.board[int(WIDTH/2)-1][int(HEIGHT/2)] = BLACK_TILE
+        self.board[int(WIDTH/2)][int(HEIGHT/2)-1] = BLACK_TILE
+        self.board[int(WIDTH/2)][int(HEIGHT/2)] = WHITE_TILE
 
     def reset_board(self):
         self = Board()
