@@ -24,6 +24,7 @@ GREEN = (0, 145, 0)
 ORANGE = (255, 165, 0)
 
 pygame.init()
+pygame.display.set_caption('Reversi')
 FONT = pygame.font.Font('freesansbold.ttf', 20)
 BIGFONT = pygame.font.Font('freesansbold.ttf', 36)
 HUGEFONT = pygame.font.Font('freesansbold.ttf', 72)
@@ -87,7 +88,6 @@ class Game:
         self.END_BACKGROUND = pygame.Surface(self.display.get_size())
         self.END_BACKGROUND.fill(DARK_GREEN)
 
-        pygame.display.set_caption('Reversi')
         self.players = 0
         self.player_one = None
         self.player_two = None
@@ -98,17 +98,8 @@ class Game:
                 break
 
     def run_game(self):
-        self.board = self.board.reset_board()
-        self.turn = BLACK_TILE
+        self.startup()
 
-        self.draw_board(self.board)
-        self.choose_players()
-
-        self.new_game()
-        pygame.display.update()
-        self.clock.tick(FPS)
-
-        self.check_for_quit()
         player = None
         other_player = None
         while True:
@@ -123,43 +114,9 @@ class Game:
                 break
 
             if isinstance(player, Reversi.Computer):
-                self.draw_board(self.board)
-                self.get_score()
-                self.get_turn(self.turn)
-                self.new_game()
-                pygame.display.update()
-                self.clock.tick(FPS)
-                time.sleep(1)
-
-                player.make_move(other_player)
-
+                self.computer_move(player, other_player)
             else:
-                move = None
-                while not move:
-                    self.check_for_quit()
-
-                    for event in pygame.event.get():
-                        if event.type == MOUSEBUTTONUP:
-                            mousex, mousey = event.pos
-                            if NEW_GAME_BUTTON.collidepoint(mousex, mousey):
-                                return True
-
-                            move = self.clicked(mousex, mousey)
-                            if move is not None and not \
-                                    player.is_valid_move(move[0], move[1]):
-                                move = None
-
-                    self.draw_board(self.board)
-                    self.get_score()
-                    self.get_turn(self.turn)
-                    self.new_game()
-                    pygame.display.update()
-                    self.clock.tick(FPS)
-
-                player.make_move(move[0], move[1], other_player)
-
-            if other_player.get_valid_moves() is not []:
-                self.turn = other_player.tile
+                self.player_move(player, other_player)
 
         self.draw_board(self.board)
         self.get_score()
@@ -169,25 +126,84 @@ class Game:
         time.sleep(2)
 
         while True:
-            self.display.blit(self.END_BACKGROUND, (0, 0))
-            self.get_winner()
-            self.display.blit(PLAY_AGAIN, PLAY_AGAIN_BUTTON)
-            self.display.blit(YES, YES_BUTTON)
-            self.display.blit(NO, NO_BUTTON)
-            pygame.display.update()
-            self.clock.tick(FPS)
+            self.end_game()
 
+    def end_game(self):
+        self.display.blit(self.END_BACKGROUND, (0, 0))
+        self.get_winner()
+        self.display.blit(PLAY_AGAIN, PLAY_AGAIN_BUTTON)
+        self.display.blit(YES, YES_BUTTON)
+        self.display.blit(NO, NO_BUTTON)
+        pygame.display.update()
+        self.clock.tick(FPS)
+
+        self.check_for_quit()
+        for event in pygame.event.get():
+            if event.type == MOUSEBUTTONUP:
+                mousex, mousey = event.pos
+                if YES_BUTTON.collidepoint((mousex, mousey)):
+                    self = Game()
+                elif NO_BUTTON.collidepoint((mousex, mousey)):
+                    pygame.quit()
+                    sys.exit()
+
+        pygame.display.update()
+        self.clock.tick(FPS)
+
+    def player_move(self, player, other_player):
+        """Handle player's move."""
+        move = None
+        while not move:
             self.check_for_quit()
+
             for event in pygame.event.get():
                 if event.type == MOUSEBUTTONUP:
                     mousex, mousey = event.pos
-                    if YES_BUTTON.collidepoint((mousex, mousey)):
-                        return True
-                    elif NO_BUTTON.collidepoint((mousex, mousey)):
-                        return False
+                    if NEW_GAME_BUTTON.collidepoint(mousex, mousey):
+                        self = Game()
 
-                pygame.display.update()
-                self.clock.tick(FPS)
+                    move = self.clicked(mousex, mousey)
+                    if move is not None and not \
+                       player.is_valid_move(move[0], move[1]):
+                        move = None
+
+            self.draw_board(self.board)
+            self.get_score()
+            self.get_turn(self.turn)
+            self.new_game()
+            pygame.display.update()
+            self.clock.tick(FPS)
+
+        player.make_move(move[0], move[1], other_player)
+        if other_player.get_valid_moves() is not []:
+            self.turn = other_player.tile
+
+    def computer_move(self, player, other_player):
+        """Handle computer's move"""
+        self.draw_board(self.board)
+        self.get_score()
+        self.get_turn(self.turn)
+        self.new_game()
+        pygame.display.update()
+        self.clock.tick(FPS)
+        time.sleep(1)
+
+        player.make_move(other_player)
+        if other_player.get_valid_moves() is not []:
+            self.turn = other_player.tile
+
+    def startup(self):
+        self.board = self.board.reset_board()
+        self.turn = BLACK_TILE
+
+        self.draw_board(self.board)
+        self.choose_players()
+
+        self.new_game()
+        pygame.display.update()
+        self.clock.tick(FPS)
+
+        self.check_for_quit()
 
     def new_game(self):
         """Show the new game button."""
